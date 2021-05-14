@@ -28,7 +28,6 @@ for diretorio, subpasta, arquivos in os.walk(diretorio):
         img =np.asarray(img)
         x_train.append(img)
         y_train.append(1)
-        break
 
 diretorio = './train/fold_1/fold_1/all/'
 for diretorio, subpasta, arquivos in os.walk(diretorio):
