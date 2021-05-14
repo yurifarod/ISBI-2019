@@ -85,7 +85,7 @@ classificador = KerasClassifier(build_fn = criarRede)
 parametros = {'batch_size': [250],
               'dropout' : [0.1],
               'epochs': [150],
-              #100, 150, 250, 350
+              #50, 100, 150, 200, 250
               'loos': ['binary_crossentropy'],
               'kernel_initializer': ['normal'],
               'activation': ['relu'],
