@@ -140,7 +140,7 @@ model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
 model.fit(x_train,
           y_train,
           batch_size=20,
-          epochs = 10)
+          epochs = 100)
 
 stop = timeit.default_timer()
 print('Time: ', stop - start)  
