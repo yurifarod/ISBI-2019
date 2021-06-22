@@ -63,7 +63,8 @@ y_valid = np.argmax(y_valid, axis=1)
 print('Done Read Train and Validation data!')
     
 def criarRede(loos, kernel_initializer, activation,
-              neurons, dropout, learning_rate):
+              neurons, dropout, learning_rate,
+              beta_1, beta_2):
     classificador = Sequential()
     classificador.add(Dense(units = neurons, activation = activation, 
                         kernel_initializer = kernel_initializer, input_shape = (x_train.shape[1],)))
@@ -75,7 +76,7 @@ def criarRede(loos, kernel_initializer, activation,
     
     classificador.add(Dense(units = 1, activation = 'sigmoid'))
     
-    opt = keras.optimizers.Adam(learning_rate=learning_rate)
+    opt = keras.optimizers.Adam(learning_rate=learning_rate, beta_1 = beta_1 , beta_2 = beta_2)
     
     classificador.compile(optimizer = opt, loss = loos,
                       metrics = ['binary_accuracy'])
@@ -90,8 +91,10 @@ parametros = {'batch_size': [250],
               'kernel_initializer': ['normal'],
               'activation': ['relu'],
               'neurons': [2560],
-              'learning_rate': [0.001]
-              #'learning_rate': [0.001, 0.0001, 0.0005, 0.0003]
+              #'learning_rate': [0.001]
+              'learning_rate': [0.01, 0.001, 0.005, 0.0001, 0.0005],
+              'beta_1': [0.99, 0.98, 0.97],
+              'beta_2': [0.99, 0.98, 0.97]
               }
 grid_search = GridSearchCV(estimator = classificador,
                             param_grid = parametros,
