@@ -14,51 +14,45 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-ALL_LABEL = [1.0, 0.0]
-HEM_LABEL = [0.0, 1.0]
+def clean_Dirt_Data(x):
+    ret = []
+    for i in x:
+        i = str(i)
+        ret.append(float(i.replace('[', '').replace('.]', '').replace(']', '') ))
+    
+    return pd.DataFrame(ret)
 
-def prepareData(train_df, valid_df):
+def prepareData(data_df):
     #Prepare Validation data
-    y_valid = list(valid_df['cellType(ALL=1, HEM=-1)'].values)
-    for i in range(len(y_valid)):
-        if y_valid[i]==-1:
-            y_valid[i] = HEM_LABEL
-        elif y_valid[i]==1:
-            y_valid[i] = ALL_LABEL
-    y_valid = np.array(y_valid)
-    x_valid = valid_df.drop(['cellType(ALL=1, HEM=-1)'], axis=1)
-    for col in x_valid.columns:
-        x_valid[col] = (x_valid[col] - train_df[col].mean()) / train_df[col].std() #mean=0, std=1
-    x_valid = x_valid.values
-
-    #Prepare Train data
-    y_train = list(train_df['cellType(ALL=1, HEM=-1)'].values)
-    for i in range(len(y_train)):
-        if y_train[i]==-1:
-            y_train[i] = HEM_LABEL
-        elif y_train[i]==1:
-            y_train[i] = ALL_LABEL
-    y_train = np.array(y_train)
-    x_train = train_df.drop(['cellType(ALL=1, HEM=-1)'], axis=1)
-    for col in x_train.columns:
-        x_train[col] = (x_train[col] - train_df[col].mean()) / train_df[col].std() #mean=0, std=1
-    x_train = x_train.values
-    return x_train, y_train, x_valid, y_valid
+    y = data_df['cellType(ALL=1, HEM=-1)'].values
+    for i in range(len(y)):
+        if y[i]==-1:
+            y[i] = 0
+        elif y[i]==1:
+            y[i] = 1
+    y = np.array(y)
+    x = data_df.drop(['cellType(ALL=1, HEM=-1)'], axis=1)
+    for col in x.columns:
+        x[col] = (x[col] - data_df[col].mean()) / data_df[col].std() #mean=0, std=1
+    x = x.values
+    return x, y
 
 print('Reading Train Dataframe...')
-train_df = pd.read_csv(Path('feature-dataframes/AugmPatLvDiv_TRAIN-AllFeats_1387-Features_7081-images.csv'), index_col=0)
+train_df = pd.read_csv(Path('feature-dataframes/AugmPatLvDiv_TRAIN-AllFeats_1612-Features_6405-images.csv'), index_col=0)
 print('Done Read Train Dataframe!')
 
 print('Reading Validation Dataframe...')
-valid_df = pd.read_csv(Path('feature-dataframes/AugmPatLvDiv_VALIDATION-AllFeats_1387-Features_2680-images.csv'), index_col=0)
+valid_df = pd.read_csv(Path('feature-dataframes/PatLvDiv_TEST-AllFeats_1612-Features_607-images.csv'), index_col=0)
 print('Done Read Validation Dataframe!')
 
 print('Preparing Data...')
 
-x_train, y_train, x_valid, y_valid = prepareData(train_df=train_df, valid_df=valid_df)
+for i in range(1603):
+    valid_df[valid_df.columns[i]] = clean_Dirt_Data(valid_df[valid_df.columns[i]])
+    train_df[train_df.columns[i]] = clean_Dirt_Data(train_df[train_df.columns[i]])
 
-y_train = np.argmax(y_train, axis=1)
-y_valid = np.argmax(y_valid, axis=1)   
+x_train, y_train = prepareData(train_df)
+x_valid, y_valid = prepareData(valid_df)
 print('Done Read Train and Validation data!')
     
 def criarRede(optimizer, loos, kernel_initializer, activation,
@@ -82,7 +76,7 @@ classificador = KerasClassifier(build_fn = criarRede)
 parametros = {'batch_size': [250, 750, 1000, 1500],
               'hidden' : [1, 2, 3, 4],
               'dropout' : [0.1, 0.25, 0.3, 0.5],
-              'epochs': [10],
+              'epochs': [50],
               #depois pica o resto
               'optimizer': ['adamax', 'adam', 'sgd'],
               'loos': ['binary_crossentropy'],
@@ -91,7 +85,7 @@ parametros = {'batch_size': [250, 750, 1000, 1500],
               'neurons': [1024, 1536, 2048, 2560]}
 grid_search = GridSearchCV(estimator = classificador,
                             param_grid = parametros,
-                            scoring = 'accuracy')
+                            scoring = 'f1_micro')
 grid_search = grid_search.fit(x_train, y_train)
 melhores_parametros = grid_search.best_params_
 melhor_precisao = grid_search.best_score_

@@ -11,7 +11,6 @@ from radiomics import firstorder
 import SimpleITK as sitk
 from scipy.spatial import distance
 from scipy.signal import resample
-
 import timeit
 
 start = timeit.default_timer()
@@ -504,29 +503,29 @@ def extract_TEXT_FeatureDict(imgPath):
     img = readImage(imgPath,'gray')
 
     height, width = img.shape
-    #img45 = cv2.warpAffine(img, cv2.getRotationMatrix2D((width/2,height/2), 45, 1), (width, height))
-    #img90 = cv2.warpAffine(img, cv2.getRotationMatrix2D((width/2,height/2), 90, 1), (width, height))
-    #img135 = cv2.warpAffine(img, cv2.getRotationMatrix2D((width/2,height/2), 135, 1), (width, height))
+    img45 = cv2.warpAffine(img, cv2.getRotationMatrix2D((width/2,height/2), 45, 1), (width, height))
+    img90 = cv2.warpAffine(img, cv2.getRotationMatrix2D((width/2,height/2), 90, 1), (width, height))
+    img135 = cv2.warpAffine(img, cv2.getRotationMatrix2D((width/2,height/2), 135, 1), (width, height))
 
     features0 = {**getGLCMFeatures(img), **getGLDMFeatures(img),
                  **getGLRLMFeatures(img), **getGLSZMFeatures(img),
                  **getNGTDMFeatures(img)}
-    #features45 = {**getGLCMFeatures(img45), **getGLDMFeatures(img45),
-    #              **getGLRLMFeatures(img45), **getGLSZMFeatures(img45),
-    #              **getNGTDMFeatures(img45)}
-    #features90 = {**getGLCMFeatures(img90), **getGLDMFeatures(img90),
-    #              **getGLRLMFeatures(img90), **getGLSZMFeatures(img90),
-    #              **getNGTDMFeatures(img90)}
-    #features135 = {**getGLCMFeatures(img135), **getGLDMFeatures(img135),
-    #               **getGLRLMFeatures(img135), **getGLSZMFeatures(img135),
-    #               **getNGTDMFeatures(img135)}
+    features45 = {**getGLCMFeatures(img45), **getGLDMFeatures(img45),
+                  **getGLRLMFeatures(img45), **getGLSZMFeatures(img45),
+                  **getNGTDMFeatures(img45)}
+    features90 = {**getGLCMFeatures(img90), **getGLDMFeatures(img90),
+                  **getGLRLMFeatures(img90), **getGLSZMFeatures(img90),
+                  **getNGTDMFeatures(img90)}
+    features135 = {**getGLCMFeatures(img135), **getGLDMFeatures(img135),
+                  **getGLRLMFeatures(img135), **getGLSZMFeatures(img135),
+                  **getNGTDMFeatures(img135)}
     
     featNames = list(features0.keys())
     for i in range(len(features0)):
         featuresDict[f'Texture_0deg_{featNames[i]}'] = features0[featNames[i]]
-    #    featuresDict[f'Texture_45deg_{featNames[i]}'] = features45[featNames[i]]
-    #    featuresDict[f'Texture_90deg_{featNames[i]}'] = features90[featNames[i]]
-    #    featuresDict[f'Texture_135deg_{featNames[i]}'] = features135[featNames[i]]
+        featuresDict[f'Texture_45deg_{featNames[i]}'] = features45[featNames[i]]
+        featuresDict[f'Texture_90deg_{featNames[i]}'] = features90[featNames[i]]
+        featuresDict[f'Texture_135deg_{featNames[i]}'] = features135[featNames[i]]
     return featuresDict
 
 def extract_FOF_FeatureDict(imgPath):
@@ -642,10 +641,9 @@ def createAugmPatLvDivDataframe():
     p1.join()
     p2.join()
 
-
 p0 = multiprocessing.Process(name='AugmPatLvDiv', target=createAugmPatLvDivDataframe)
 p0.start()
-p0.join()    
+p0.join()
 print(f"\nEnd Script!\n{'#'*50}")
 
 stop = timeit.default_timer()

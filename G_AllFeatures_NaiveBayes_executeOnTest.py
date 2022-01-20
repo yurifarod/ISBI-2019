@@ -8,14 +8,12 @@ Created on Thu May 13 11:13:38 2021
 @author: yurifarod, Elwyslan
 """
 
-
-from keras.layers import Dropout, Dense
-from keras.models import Sequential
-from sklearn.metrics import f1_score
-from pathlib import Path
 import numpy as np
 import pandas as pd
-from tensorflow import keras
+from pathlib import Path
+from sklearn.metrics import f1_score
+from sklearn.naive_bayes import GaussianNB
+#from tensorflow import keras
 import timeit
 
 start = timeit.default_timer()
@@ -62,47 +60,10 @@ x_valid, y_valid = prepareData(valid_df)
 
 print('Done Read Train and Validation data!')
 
-'''
-dropout = 0.1
-epochs = 150
-kernel_initializer = 'normal'
-activation = 'relu'
-loss = 'binary_crossentropy'
-neurons = 2560
-learning_rate = 0.001
-batch_size = 250
-'''
-dropout = 0.1
-epochs = 500
-kernel_initializer = 'normal'
-activation = 'relu'
-loss = 'binary_crossentropy'
-neurons = 2048
-learning_rate = 0.0001
-batch_size = 250
+classificador = GaussianNB(priors=None, var_smoothing=1e-9)
+classificador.fit(x_train, y_train)
 
-
-classificador = Sequential()
-classificador.add(Dense(units = neurons, activation = activation, 
-                    kernel_initializer = kernel_initializer, input_shape = (x_train.shape[1],)))
-classificador.add(Dropout(dropout))
-
-classificador.add(Dense(units = neurons, activation = activation, 
-                    kernel_initializer = kernel_initializer))
-classificador.add(Dropout(dropout))
-
-classificador.add(Dense(units = 1, activation = 'sigmoid'))
-
-opt = keras.optimizers.Adam(learning_rate=learning_rate, decay=0.0001)
-
-classificador.compile(optimizer = opt, loss = loss,
-                  metrics = ['binary_accuracy'])
-
-classificador.fit(x_train, y_train, batch_size = batch_size, epochs = epochs)
-
-qtd_param = classificador.count_params()
-
-print(qtd_param)
+previsoes = classificador.predict(x_valid)
 
 #Aqui fazemos a previsão
 previsoes = classificador.predict(x_valid)
@@ -112,7 +73,7 @@ previsoes = (previsoes > 0.5)
 precisao = f1_score(y_valid, previsoes)
 
 previsoes_saida = pd.DataFrame(previsoes)
-previsoes_saida.to_csv('rna_previsoes_%d.csv' % epochs)
+previsoes_saida.to_csv('naive_bayes_previsoes.csv')
 
 print('F1-Score: ', precisao)
 stop = timeit.default_timer()
