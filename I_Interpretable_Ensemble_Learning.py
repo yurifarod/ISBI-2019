@@ -13,7 +13,13 @@ import pandas as pd
 from pathlib import Path
 from sklearn.svm import LinearSVC
 from sklearn.naive_bayes import GaussianNB
+from keras.wrappers.scikit_learn import KerasClassifier
+from keras.layers import Dropout, Dense
+from keras.models import Sequential
+from tensorflow import keras
 from sklearn.feature_selection import SequentialFeatureSelector
+import mlxtend
+from mlxtend.feature_selection import SequentialFeatureSelector as SFS
 
 def clean_Dirt_Data(x):
     ret = []
@@ -57,16 +63,77 @@ x_valid, y_valid = prepareData(valid_df)
 
 print('Done Read Train and Validation data!')
 
-#Avaliacao do SVC
-classificador_svm = LinearSVC()
-# Sequential Forward Selection(sfs)
-sfs = SequentialFeatureSelector(classificador_svm, n_features_to_select=1)
-sfs.fit(x_train, y_train)
-result_svc = sfs.get_support()
+# #Avaliacao do SVC
+# classificador_svm = LinearSVC()
+# # Sequential Forward Selection(sfs)
+# sfs = SequentialFeatureSelector(classificador_svm, n_features_to_select=1)
+# sfs.fit(x_train, y_train)
+# result_svc = sfs.get_support()
 
-#Avaliacao do NB
-classificador_nb = GaussianNB(priors=None, var_smoothing=1e-9)
-# Sequential Forward Selection(sfs)
-sfs = SequentialFeatureSelector(classificador_nb, n_features_to_select=1)
-sfs.fit(x_train, y_train)
-result_nb = sfs.get_support()
+# #Avaliacao do NB
+# classificador_nb = GaussianNB(priors=None, var_smoothing=1e-9)
+# # Sequential Forward Selection(sfs)
+# sfs = SequentialFeatureSelector(classificador_nb, n_features_to_select=1)
+# sfs.fit(x_train, y_train)
+# result_nb = sfs.get_support()
+
+
+#Avaliacao da RNA
+def criarRede(train_input):
+    classificador = Sequential()
+    classificador.add(Dense(units = 1536,
+                            activation = 'relu', 
+                            kernel_initializer = 'normal',
+                            input_shape = (train_input.shape[1],)))
+    classificador.add(Dropout(0.1))
+    
+    classificador.add(Dense(units = 1536, activation = 'relu', 
+                            kernel_initializer = 'normal'))
+    classificador.add(Dropout(0.1))
+    
+    classificador.add(Dense(units = 1, activation = 'sigmoid'))
+    
+    opt = keras.optimizers.Adam(learning_rate=0.001,
+                                beta_1 = 0.97,
+                                beta_2 = 0.97,
+                                decay=0.05)
+    
+    classificador.compile(optimizer = opt, loss = 'binary_crossentropy',
+                      metrics = ['binary_accuracy'])
+    return classificador
+
+keras.backend.clear_session()
+
+# Wrap Keras nn and generating SFS object
+class MakeModel(object):
+
+    def __init__(self, X=None, y=None):
+        pass
+
+    def predict(self, X):
+        y_pred = self.model.predict(X)
+        y_pred = (y_pred > 0.5)
+        return y_pred
+    
+    def fit(self, X, y):
+        skwrapped_model = KerasClassifier(build_fn=criarRede,
+                                          train_input=X,
+                                          epochs=250,
+                                          batch_size=1500,
+                                          validation_split=2,
+                                          verbose=0)
+        self.model = skwrapped_model
+        self.model.fit(X, y)
+        return self.model
+
+sffs = SFS(MakeModel(),
+            k_features=(1, x_train.shape[1]),
+            floating=True,
+            clone_estimator=False,
+            cv=0,
+            n_jobs=1,
+            scoring='accuracy')
+
+# Apply SFS to identify best feature subset
+sffs = sffs.fit(x_train, y_train)
+result_rna = sffs.get_support()
