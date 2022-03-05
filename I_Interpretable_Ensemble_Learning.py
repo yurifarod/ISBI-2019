@@ -136,4 +136,5 @@ sffs = SFS(MakeModel(),
 
 # Apply SFS to identify best feature subset
 sffs = sffs.fit(x_train, y_train)
-result_rna = sffs.get_support()
+result_rna_sub = sffs.subsets_
+result_rna_id = sffs.k_feature_idx_
