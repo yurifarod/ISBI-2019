@@ -72,17 +72,19 @@ def criarRede(optimizer, loos, kernel_initializer, activation,
                       metrics = ['binary_accuracy'])
     return classificador
 
+
 classificador = KerasClassifier(build_fn = criarRede)
-parametros = {'batch_size': [250, 750, 1000, 1500],
-              'hidden' : [1, 2, 3, 4],
-              'dropout' : [0.1, 0.25, 0.3, 0.5],
-              'epochs': [50],
-              #depois pica o resto
+parametros = {
+              'batch_size': [250, 750, 1000, 1500],
               'optimizer': ['adamax', 'adam', 'sgd'],
-              'loos': ['binary_crossentropy'],
               'kernel_initializer': ['random_uniform', 'normal'],
               'activation': ['relu', 'prelu', 'sigmoid', 'softmax'],
-              'neurons': [1024, 1536, 2048, 2560]}
+              'hidden' : [1, 2, 3, 4],
+              'epochs': [50],
+              'loos': ['binary_crossentropy'],
+              'dropout' : [0.1, 0.25, 0.3, 0.5],
+              'neurons': [1024, 1536, 2048, 2560],
+              }
 grid_search = GridSearchCV(estimator = classificador,
                             param_grid = parametros,
                             scoring = 'f1_micro')
