@@ -54,15 +54,19 @@ rna_previsoes = pd.read_csv(Path('previsoes/rna_previsoes.csv'), index_col = 0)
 ensemble_scenary_1 = rna_previsoes + knn_previsoes + svm_previsoes
 ensemble_scenary_2 = rna_previsoes + nb_previsoes + svm_previsoes
 ensemble_scenary_3 = rna_previsoes + knn_previsoes + nb_previsoes
+ensemble_scenary_4 = svm_previsoes + knn_previsoes + nb_previsoes
 
 precisao = f1_score(y_valid, ensemble_scenary_1)
 print('Scenary 1 F1-Score:' , precisao)
 
 precisao = f1_score(y_valid, ensemble_scenary_2)
-print('Scenary 1 F1-Score:' , precisao)
+print('Scenary 2 F1-Score:' , precisao)
 
 precisao = f1_score(y_valid, ensemble_scenary_3)
-print('Scenary 2 F1-Score:' , precisao)
+print('Scenary 3 F1-Score:' , precisao)
+
+precisao = f1_score(y_valid, ensemble_scenary_4)
+print('Scenary 4 F1-Score:' , precisao)
 
 precisao = f1_score(y_valid, rna_previsoes)
 print('All Features RNA F1-Score:' , precisao)
