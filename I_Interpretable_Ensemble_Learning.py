@@ -63,22 +63,28 @@ x_valid, y_valid = prepareData(valid_df)
 
 print('Done Read Train and Validation data!')
 
-# #Avaliacao do SVC
-# classificador_svm = LinearSVC()
-# # Sequential Forward Selection(sfs)
-# sfs = SequentialFeatureSelector(classificador_svm, n_features_to_select=1)
-# sfs.fit(x_train, y_train)
-# result_svc = sfs.get_support()
+#Avaliacao do NB
+classificador_nb = GaussianNB(priors=None, var_smoothing=1e-9)
+# Sequential Forward Selection(sfs)
+sfs = SequentialFeatureSelector(classificador_nb, n_features_to_select=250)
+sfs.fit(x_train, y_train)
+result_nb = sfs.get_support()
 
-# #Avaliacao do NB
-# classificador_nb = GaussianNB(priors=None, var_smoothing=1e-9)
-# # Sequential Forward Selection(sfs)
-# sfs = SequentialFeatureSelector(classificador_nb, n_features_to_select=1)
-# sfs.fit(x_train, y_train)
-# result_nb = sfs.get_support()
+result_nb_out = pd.DataFrame(result_nb)
+result_nb_out.to_csv('nb_interpretavel.csv')
+
+#Avaliacao do SVC
+classificador_svm = LinearSVC()
+# Sequential Forward Selection(sfs)
+sfs = SequentialFeatureSelector(classificador_svm, n_features_to_select=25)
+sfs.fit(x_train, y_train)
+result_svc = sfs.get_support()
+
+result_svc_out = pd.DataFrame(result_svc)
+result_svc_out.to_csv('svc_interpretavel.csv')
 
 
-#Avaliacao da RNA
+# #Avaliacao da RNA
 def criarRede(train_input):
     classificador = Sequential()
     classificador.add(Dense(units = 1536,
