@@ -54,7 +54,7 @@ print('Done Read Validation Dataframe!')
 
 print('Preparing Data...')
 
-for i in range(1603):
+for i in range(1613):
     valid_df[valid_df.columns[i]] = clean_Dirt_Data(valid_df[valid_df.columns[i]])
     train_df[train_df.columns[i]] = clean_Dirt_Data(train_df[train_df.columns[i]])
 
@@ -66,7 +66,7 @@ print('Done Read Train and Validation data!')
 #Avaliacao do NB
 classificador_nb = GaussianNB(priors=None, var_smoothing=1e-9)
 # Sequential Forward Selection(sfs)
-sfs = SequentialFeatureSelector(classificador_nb, n_features_to_select=250)
+sfs = SequentialFeatureSelector(classificador_nb, n_features_to_select = x_train.shape[1] * 0.15)
 sfs.fit(x_train, y_train)
 result_nb = sfs.get_support()
 
@@ -76,7 +76,7 @@ result_nb_out.to_csv('nb_interpretavel.csv')
 #Avaliacao do SVC
 classificador_svm = LinearSVC()
 # Sequential Forward Selection(sfs)
-sfs = SequentialFeatureSelector(classificador_svm, n_features_to_select=25)
+sfs = SequentialFeatureSelector(classificador_svm, n_features_to_select = x_train.shape[1] * 0.15)
 sfs.fit(x_train, y_train)
 result_svc = sfs.get_support()
 

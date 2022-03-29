@@ -47,7 +47,7 @@ print('Done Read Validation Dataframe!')
 
 print('Preparing Data...')
 
-for i in range(1603):
+for i in range(1613):
     valid_df[valid_df.columns[i]] = clean_Dirt_Data(valid_df[valid_df.columns[i]])
     train_df[train_df.columns[i]] = clean_Dirt_Data(train_df[train_df.columns[i]])
 
