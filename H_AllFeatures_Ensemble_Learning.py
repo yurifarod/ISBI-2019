@@ -11,7 +11,7 @@ Created on Thu May 13 11:13:38 2021
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, accuracy_score, recall_score, roc_auc_score, cohen_kappa_score
 
 def clean_Dirt_Data(x):
     ret = []
@@ -79,3 +79,16 @@ print('Scenary 4 F1-Score:' , precisao)
 
 precisao = f1_score(y_valid, rna_previsoes)
 print('All Features RNA F1-Score:' , precisao)
+
+'''
+Mais metricas do melhor cenario
+'''
+
+acc = accuracy_score(y_valid, ensemble_scenary_1)
+print('Scenary 1 Acuraccy:' , acc)
+rec = recall_score(y_valid, ensemble_scenary_1)
+print('Scenary 1 Recall:' , rec)
+roc = roc_auc_score(y_valid, ensemble_scenary_1)
+print('Scenary 1 ROC AUC:' , roc)
+kappa = cohen_kappa_score(y_valid, ensemble_scenary_1)
+print('Reduced Ensemble Kappa:' , roc)

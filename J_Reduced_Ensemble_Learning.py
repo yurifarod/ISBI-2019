@@ -15,10 +15,10 @@ from pathlib import Path
 from sklearn.svm import LinearSVC
 from sklearn.naive_bayes import GaussianNB
 from keras.wrappers.scikit_learn import KerasClassifier
-from sklearn.metrics import f1_score
 from keras.layers import Dropout, Dense
 from keras.models import Sequential
 from tensorflow import keras
+from sklearn.metrics import f1_score, accuracy_score, recall_score, roc_auc_score, cohen_kappa_score
 
 def clean_Dirt_Data(x):
     ret = []
@@ -149,5 +149,14 @@ for i in range(607):
         ensemble_reduced.append(0)
 ensemble_reduced = np.array(ensemble_reduced)
 
+
 precisao = f1_score(y_valid, ensemble_reduced)
 print('Reduced Ensemble F1-Score: ' , precisao)
+acc = accuracy_score(y_valid, ensemble_reduced)
+print('Reduced Ensemble  Acuraccy:' , acc)
+rec = recall_score(y_valid, ensemble_reduced)
+print('Reduced Ensemble  Recall:' , rec)
+roc = roc_auc_score(y_valid, ensemble_reduced)
+print('Reduced Ensemble  ROC AUC:' , roc)
+kappa = cohen_kappa_score(y_valid, ensemble_reduced)
+print('Reduced Ensemble Kappa:' , roc)
