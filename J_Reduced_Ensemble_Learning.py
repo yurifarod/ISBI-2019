@@ -106,7 +106,7 @@ learning_rate = 0.001
 beta_1 = 0.97
 beta_2 = 0.97
 decay  = 0.05
-epochs = 250
+epochs = 150
 classificador = Sequential()
 classificador.add(Dense(units = neurons, activation = activation, 
                     kernel_initializer = kernel_initializer, input_shape = (x_train.shape[1],)))

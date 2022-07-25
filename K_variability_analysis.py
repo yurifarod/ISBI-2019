@@ -115,7 +115,7 @@ for it in range(25):
     beta_1 = 0.97
     beta_2 = 0.97
     decay  = 0.05
-    epochs = 250
+    epochs = 150
     
     classificador = Sequential()
     classificador.add(Dense(units = neurons, activation = activation, 

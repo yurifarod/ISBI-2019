@@ -124,7 +124,7 @@ class MakeModel(object):
     def fit(self, X, y):
         skwrapped_model = KerasClassifier(build_fn=criarRede,
                                           train_input=X,
-                                          epochs=250,
+                                          epochs=150,
                                           batch_size=1500,
                                           validation_split=2,
                                           verbose=0)
