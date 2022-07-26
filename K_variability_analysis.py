@@ -5,7 +5,6 @@ Chagging code for extend paper on 23/07/2022;
 
 @author: yurifarod, Elwyslan
 """
-
 import random
 import numpy as np
 import pandas as pd
@@ -18,11 +17,17 @@ from tensorflow import keras
 from sklearn.metrics import f1_score, accuracy_score, recall_score, roc_auc_score, cohen_kappa_score
 
 reduce_factor = 1
-precisao = []
+f1s = []
 acc = []
 roc = []
 rec = []
 kappa = []
+
+ann_f1s = []
+ann_acc = []
+ann_roc = []
+ann_rec = []
+ann_kappa = []
 
 def clean_Dirt_Data(x):
     ret = []
@@ -46,12 +51,12 @@ def prepareData(data_df):
         x[col] = (x[col] - data_df[col].mean()) / data_df[col].std() #mean=0, std=1
     x = x.values
     return x, y
-
+            
 '''
 100-FOLD VALIDATION
 '''
 
-for it in range(25):
+for it in range(100):
     print('Reading Train Dataframe...')
     train_df = pd.read_csv(Path('feature-dataframes/AugmPatLvDiv_TRAIN-AllFeats_1612-Features_6405-images.csv'), index_col=0)
     print('Done Read Train Dataframe!')
@@ -139,7 +144,7 @@ for it in range(25):
     
     print('Number of Parameters: ', qtd_param)
     
-    print('Calculating the Reduced Ensemble F1-Score...')
+    print('Calculating the Ensemble F1-Score...')
     
     previsoes_rna = classificador.predict(x_valid)
     previsoes_rna = (previsoes_rna > 0.5)
@@ -160,8 +165,13 @@ for it in range(25):
             ensemble_reduced.append(0)
     ensemble_reduced = np.array(ensemble_reduced)
     
+    ann_f1s.append(f1_score(y_valid, previsoes_rna))
+    ann_acc.append(accuracy_score(y_valid, previsoes_rna))
+    ann_rec.append(recall_score(y_valid, previsoes_rna))
+    ann_roc.append(roc_auc_score(y_valid, previsoes_rna))
+    ann_kappa.append(cohen_kappa_score(y_valid, previsoes_rna))
     
-    precisao.append(f1_score(y_valid, ensemble_reduced))
+    f1s.append(f1_score(y_valid, ensemble_reduced))
     acc.append(accuracy_score(y_valid, ensemble_reduced))
     rec.append(recall_score(y_valid, ensemble_reduced))
     roc.append(roc_auc_score(y_valid, ensemble_reduced))
@@ -171,15 +181,19 @@ print('=======================================================')
 print('==============RESULTADO FINAL==========================')
 print('=======================================================')
 
-#Media, mediana, maximo, minimo e desvio padrao
+#ANN SCORE
+print('ANN DATA')
+print('f1-score mean: ', np.mean(ann_f1s ))
+print('acc mean: ', np.mean(ann_acc ))
 
+print('ENSEMBLE DATA')
 print('F1-SCORE:')
-print('mean: ', np.mean(precisao ))
-print('median: ', np.median(precisao ))
-print('max: ', np.max(precisao ))
-print('min: ', np.min(precisao ))
-print('variance: ', np.var(precisao ))
-print('std: ', np.std(precisao ))
+print('mean: ', np.mean(f1s ))
+print('median: ', np.median(f1s ))
+print('max: ', np.max(f1s ))
+print('min: ', np.min(f1s ))
+print('variance: ', np.var(f1s ))
+print('std: ', np.std(f1s ))
 
 print('ACURACCY:')
 print('mean: ', np.mean(acc ))
@@ -212,3 +226,8 @@ print('max: ', np.max(kappa ))
 print('min: ', np.min(kappa ))
 print('variance: ', np.var(kappa ))
 print('std: ', np.std(kappa ))
+
+#Escrevendo o arquivo com os dados das execucoes
+import pandas
+df = pandas.DataFrame(data={"ANN F1": ann_f1s, "ANN ACC": ann_acc, "ENS F1": acc, 'ENS ACC': f1s})
+df.to_csv("./100-fold_cross_validation.csv", sep=',',index=False)
