@@ -16,7 +16,7 @@ from keras.models import Sequential
 from tensorflow import keras
 from sklearn.metrics import f1_score, accuracy_score, recall_score, roc_auc_score, cohen_kappa_score
 
-reduce_factor = 1
+reduce_factor = 15
 f1s = []
 acc = []
 roc = []
@@ -156,14 +156,14 @@ for it in range(100):
             previsoes_num_rna.append(0)
     previsoes_rna = np.array(previsoes_num_rna)
     
-    ensemble_reduced = []
+    prev_ensemble = []
     new_size_x = valid_df.shape[0]
     for i in range(new_size_x):
         if previsoes_rna[i] + previsoes_nb[i] + previsoes_svc[i] > 1:
-            ensemble_reduced.append(1)
+            prev_ensemble.append(1)
         else:
-            ensemble_reduced.append(0)
-    ensemble_reduced = np.array(ensemble_reduced)
+            prev_ensemble.append(0)
+    prev_ensemble = np.array(prev_ensemble)
     
     ann_f1s.append(f1_score(y_valid, previsoes_rna))
     ann_acc.append(accuracy_score(y_valid, previsoes_rna))
@@ -171,22 +171,59 @@ for it in range(100):
     ann_roc.append(roc_auc_score(y_valid, previsoes_rna))
     ann_kappa.append(cohen_kappa_score(y_valid, previsoes_rna))
     
-    f1s.append(f1_score(y_valid, ensemble_reduced))
-    acc.append(accuracy_score(y_valid, ensemble_reduced))
-    rec.append(recall_score(y_valid, ensemble_reduced))
-    roc.append(roc_auc_score(y_valid, ensemble_reduced))
-    kappa.append(cohen_kappa_score(y_valid, ensemble_reduced))
+    f1s.append(f1_score(y_valid, prev_ensemble))
+    acc.append(accuracy_score(y_valid, prev_ensemble))
+    rec.append(recall_score(y_valid, prev_ensemble))
+    roc.append(roc_auc_score(y_valid, prev_ensemble))
+    kappa.append(cohen_kappa_score(y_valid, prev_ensemble))
 
 print('=======================================================')
 print('==============RESULTADO FINAL==========================')
 print('=======================================================')
 
 #ANN SCORE
-print('ANN DATA')
-print('f1-score mean: ', np.mean(ann_f1s ))
-print('acc mean: ', np.mean(ann_acc ))
+print('============= ANN DATA ================')
+print('F1-SCORE:')
+print('mean: ', np.mean(ann_f1s ))
+print('median: ', np.median(ann_f1s ))
+print('max: ', np.max(ann_f1s ))
+print('min: ', np.min(ann_f1s ))
+print('variance: ', np.var(ann_f1s ))
+print('std: ', np.std(ann_f1s ))
 
-print('ENSEMBLE DATA')
+print('ACURACCY:')
+print('mean: ', np.mean(ann_acc ))
+print('median: ', np.median(ann_acc ))
+print('max: ', np.max(ann_acc ))
+print('min: ', np.min(ann_acc ))
+print('variance: ', np.var(ann_acc ))
+print('std: ', np.std(ann_acc ))
+
+print('REC:')
+print('mean: ', np.mean(ann_rec ))
+print('median: ', np.median(ann_rec ))
+print('max: ', np.max(ann_rec ))
+print('min: ', np.min(ann_rec ))
+print('variance: ', np.var(ann_rec ))
+print('std: ', np.std(ann_rec ))
+
+print('ROC:')
+print('mean: ', np.mean(ann_roc ))
+print('median: ', np.median(ann_roc ))
+print('max: ', np.max(ann_roc ))
+print('min: ', np.min(ann_roc ))
+print('variance: ', np.var(ann_roc ))
+print('std: ', np.std(ann_roc ))
+
+print('KAPPA:')
+print('mean: ', np.mean(ann_kappa ))
+print('median: ', np.median(ann_kappa ))
+print('max: ', np.max(ann_kappa ))
+print('min: ', np.min(ann_kappa ))
+print('variance: ', np.var(ann_kappa ))
+print('std: ', np.std(ann_kappa ))
+
+print('================ ENSEMBLE DATA ================')
 print('F1-SCORE:')
 print('mean: ', np.mean(f1s ))
 print('median: ', np.median(f1s ))
@@ -229,5 +266,6 @@ print('std: ', np.std(kappa ))
 
 #Escrevendo o arquivo com os dados das execucoes
 import pandas
-df = pandas.DataFrame(data={"ANN F1": ann_f1s, "ANN ACC": ann_acc, "ENS F1": acc, 'ENS ACC': f1s})
-df.to_csv("./100-fold_cross_validation.csv", sep=',',index=False)
+df = pandas.DataFrame(data={"ANN F1": ann_f1s, "ANN ACC": ann_acc, "ANN REC": ann_rec, "ANN ROC": ann_roc, "ANN KAPPA": ann_kappa,
+                            'ENS ACC': f1s, "ENS F1": acc, "ENS REC": rec, "ENS ROC": roc, "ENS KAPPA": kappa})
+df.to_csv("./100-fold_cross_validation.csv", sep=';',index=False)
