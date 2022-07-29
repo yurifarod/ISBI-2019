@@ -88,7 +88,6 @@ for it in range(100):
     
     print('Reading Validation Dataframe...')
     valid_df = pd.read_csv(Path('feature-dataframes/PatLvDiv_TEST-AllFeats_1612-Features_1503-images.csv'), index_col=0)
-    
     print('Preparing Data...')
     
     new_size = valid_df.shape[1]
@@ -195,9 +194,17 @@ for it in range(100):
     ann_roc.append(roc_auc_score(y_valid, previsoes_rna))
     ann_kappa.append(cohen_kappa_score(y_valid, previsoes_rna))
     ann_prec.append(precision_score(y_valid, previsoes_rna))
-    ann_tp, ann_fp, ann_tn, ann_fn = metric_calc(previsoes_rna, y_valid)
+    ann_tp_t, ann_fp_t, ann_tn_t, ann_fn_t = metric_calc(previsoes_rna, y_valid)
+    ann_tp.append(ann_tp_t)
+    ann_fp.append(ann_fp_t)
+    ann_fn.append(ann_fn_t)
+    ann_tn.append(ann_tn_t)
 
-    tp, fp, tn, fn = metric_calc(prev_ensemble, y_valid)
+    tp_t, fp_t, tn_t, fn_t = metric_calc(prev_ensemble, y_valid)
+    tp.append(tp_t)
+    fp.append(fp_t)
+    fn.append(fn_t)
+    tn.append(tn_t)
     f1s.append(f1_score(y_valid, prev_ensemble))
     acc.append(accuracy_score(y_valid, prev_ensemble))
     rec.append(recall_score(y_valid, prev_ensemble))
@@ -313,7 +320,7 @@ import pandas
 df = pandas.DataFrame(data={"ANN F1": ann_f1s, "ANN ACC": ann_acc, "ANN REC": ann_rec, "ANN ROC": ann_roc,
                             "ANN KAPPA": ann_kappa, "ANN PREC": ann_rec,'ANN TP': ann_tp,'ANN FP': ann_fp,
                             'ANN TN': ann_tn,'ANN FN': ann_fn,
-                            'ENS ACC': f1s, "ENS F1": acc, "ENS REC": rec, "ENS ROC": roc,
+                            'ENS F1': f1s, "ENS ACC": acc, "ENS REC": rec, "ENS ROC": roc,
                             "ENS KAPPA": kappa, "ENS PREC": prec, 'ENS TP': tp,'ENS FP': fp,
                             'ENS TN': tn,'ENS FN': fn,})
 df.to_csv("./100-fold_cross_validation.csv", sep=';',index=False)
