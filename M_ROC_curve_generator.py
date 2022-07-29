@@ -1,24 +1,25 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Chagging code for extend paper on 14/01/2022;
-
-Created on Thu May 13 11:13:38 2021
+Chagging code for extend paper on 23/07/2022;
 
 @author: yurifarod, Elwyslan
 """
-
-import csv
+import random
 import numpy as np
 import pandas as pd
 from pathlib import Path
 from sklearn.svm import LinearSVC
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.naive_bayes import GaussianNB
-from keras.wrappers.scikit_learn import KerasClassifier
 from keras.layers import Dropout, Dense
 from keras.models import Sequential
 from tensorflow import keras
 from sklearn.metrics import f1_score, accuracy_score, recall_score, roc_auc_score, cohen_kappa_score
+from sklearn import metrics
+import matplotlib.pyplot as plt
+
+reduce_factor = 15
 
 def clean_Dirt_Data(x):
     ret = []
@@ -42,33 +43,24 @@ def prepareData(data_df):
         x[col] = (x[col] - data_df[col].mean()) / data_df[col].std() #mean=0, std=1
     x = x.values
     return x, y
+            
 
 print('Reading Train Dataframe...')
 train_df = pd.read_csv(Path('feature-dataframes/AugmPatLvDiv_TRAIN-AllFeats_1612-Features_40000-images.csv'), index_col=0)
-print('Done Read Train Dataframe!')
+prior_train_df = pd.read_csv(Path('feature-dataframes/AugmPatLvDiv_TRAIN-AllFeats_1612-Features_40000-images.csv'), index_col=0)
 
+extra_train_df = pd.read_csv(Path('feature-dataframes/AugmPatLvDiv_VALIDATION-AllFeats_1612-Features_10000-images.csv'), index_col=0)
+
+extra_train_df.index += len(prior_train_df.index)
+
+frames = [prior_train_df, extra_train_df]
+
+train_df = pd.concat(frames)
+print('Done Read Train Dataframe!')
+   
 print('Reading Validation Dataframe...')
 valid_df = pd.read_csv(Path('feature-dataframes/PatLvDiv_TEST-AllFeats_1612-Features_1503-images.csv'), index_col=0)
 print('Done Read Validation Dataframe!')
-
-print('Reducing Data...')
-
-nb_features = pd.read_csv(Path('nb_interpretavel.csv'), index_col=0).values
-svc_features = pd.read_csv(Path('svc_interpretavel.csv'), index_col=0).values
-rna_features = pd.read_csv(Path('rna_interpretavel_manual.csv'), index_col=0).values
-
-features = valid_df.columns
-
-f = open('z_interpretable_ensemble_analysis.txt', 'w')
-
-for i in range(1613):
-    if i != 0:
-        if nb_features[i-1] or svc_features[i-1] or rna_features[i-1]:
-            f.write(features[i] + '\n')
-        else:
-            valid_df.drop(features[i], inplace=True, axis=1)
-            train_df.drop(features[i], inplace=True, axis=1)
-f.close()
 
 print('Preparing Data...')
 
@@ -77,6 +69,25 @@ new_size = valid_df.shape[1]
 for i in range(new_size):
     valid_df[valid_df.columns[i]] = clean_Dirt_Data(valid_df[valid_df.columns[i]])
     train_df[train_df.columns[i]] = clean_Dirt_Data(train_df[train_df.columns[i]])
+
+
+print('Reducing Valid Data...')
+v_size = len(valid_df.index)
+label = []
+for i in range(v_size):
+    if(reduce_factor == random.randint(0, 100) ):
+        label.append(i)
+
+valid_df = valid_df.drop(labels = label, inplace=False, axis=0)
+
+print('Reducing Training Data...')
+t_size = len(train_df.index)
+label = []
+for i in range(t_size):
+    if(reduce_factor == random.randint(0, 100) ):
+        label.append(i)
+
+train_df = train_df.drop(labels = label, inplace=False, axis=0)
 
 x_train, y_train = prepareData(train_df)
 x_valid, y_valid = prepareData(valid_df)
@@ -88,12 +99,17 @@ classificador = GaussianNB(priors=None, var_smoothing=1e-9)
 classificador.fit(x_train, y_train)
 
 previsoes_nb = classificador.predict(x_valid)
+prob_nb = classificador.predict_proba(x_valid)
 
 print('Training SVM')
 classificador = LinearSVC()
 classificador.fit(x_train, y_train)
 
 previsoes_svc = classificador.predict(x_valid)
+
+clf = CalibratedClassifierCV(classificador) 
+clf.fit(x_train, y_train)
+prob_svc = clf.predict_proba(x_valid)
 
 print('Training RNA')
 kernel_initializer = 'normal'
@@ -107,6 +123,7 @@ beta_1 = 0.97
 beta_2 = 0.97
 decay  = 0.05
 epochs = 150
+
 classificador = Sequential()
 classificador.add(Dense(units = neurons, activation = activation, 
                     kernel_initializer = kernel_initializer, input_shape = (x_train.shape[1],)))
@@ -129,9 +146,10 @@ qtd_param = classificador.count_params()
 
 print('Number of Parameters: ', qtd_param)
 
-print('Calculating the Reduced Ensemble F1-Score...')
+print('Calculating the ROC curve...')
 
 previsoes_rna = classificador.predict(x_valid)
+prob_rna = previsoes_rna
 previsoes_rna = (previsoes_rna > 0.5)
 previsoes_num_rna = []
 for i in previsoes_rna:
@@ -141,22 +159,28 @@ for i in previsoes_rna:
         previsoes_num_rna.append(0)
 previsoes_rna = np.array(previsoes_num_rna)
 
-ensemble_reduced = []
-for i in range(607):
+prev_ensemble = []
+prob_ensemble = []
+new_size_x = valid_df.shape[0]
+for i in range(new_size_x):
+    
+    #pega as probabilidades
+    lista = [prob_nb[i][0], prob_svc[i][0], prob_rna[i][0]]
+    prob_ensemble.append(np.median(lista))
+    
     if previsoes_rna[i] + previsoes_nb[i] + previsoes_svc[i] > 1:
-        ensemble_reduced.append(1)
+        prev_ensemble.append(1)
     else:
-        ensemble_reduced.append(0)
-ensemble_reduced = np.array(ensemble_reduced)
+        prev_ensemble.append(0)
+prev_ensemble = np.array(prev_ensemble)
 
+fpr, tpr, _ = metrics.roc_curve(y_valid,  prob_ensemble)
+auc = metrics.roc_auc_score(y_valid, prob_ensemble)
 
-precisao = f1_score(y_valid, ensemble_reduced)
-print('Reduced Ensemble F1-Score: ' , precisao)
-acc = accuracy_score(y_valid, ensemble_reduced)
-print('Reduced Ensemble  Acuraccy:' , acc)
-rec = recall_score(y_valid, ensemble_reduced)
-print('Reduced Ensemble  Recall:' , rec)
-roc = roc_auc_score(y_valid, ensemble_reduced)
-print('Reduced Ensemble  ROC AUC:' , roc)
-kappa = cohen_kappa_score(y_valid, ensemble_reduced)
-print('Reduced Ensemble Kappa:' , roc)
+#create ROC curve
+plt.plot(fpr,tpr,label="AUC="+str(auc))
+plt.ylabel('True Positive Rate')
+plt.xlabel('False Positive Rate')
+plt.legend(loc=4)
+plt.show()
+

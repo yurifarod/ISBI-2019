@@ -45,11 +45,11 @@ def prepareData(data_df):
     return x, y
 
 print('Reading Train Dataframe...')
-train_df = pd.read_csv(Path('feature-dataframes/AugmPatLvDiv_TRAIN-AllFeats_1612-Features_6405-images.csv'), index_col=0)
+train_df = pd.read_csv(Path('feature-dataframes/AugmPatLvDiv_TRAIN-AllFeats_1612-Features_40000-images.csv'), index_col=0)
 print('Done Read Train Dataframe!')
 
 print('Reading Validation Dataframe...')
-valid_df = pd.read_csv(Path('feature-dataframes/PatLvDiv_TEST-AllFeats_1612-Features_607-images.csv'), index_col=0)
+valid_df = pd.read_csv(Path('feature-dataframes/PatLvDiv_TEST-AllFeats_1612-Features_1503-images.csv'), index_col=0)
 print('Done Read Validation Dataframe!')
 
 print('Preparing Data...')

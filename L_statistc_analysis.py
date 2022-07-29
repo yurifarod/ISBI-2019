@@ -39,11 +39,11 @@ print(wilcoxon(ann_f1, ens_f1))
 
   
 # Creating plot 
-# dt_acc = ([ann_acc, ens_acc])
-# plt.boxplot(dt_acc)
+dt_acc = ([ann_acc, ens_acc])
+plt.boxplot(dt_acc)
 
-dt_f1 = ([ann_f1, ens_f1])
-plt.boxplot(dt_f1) 
+# dt_f1 = ([ann_f1, ens_f1])
+# plt.boxplot(dt_f1) 
   
 # show plot 
 plt.show()

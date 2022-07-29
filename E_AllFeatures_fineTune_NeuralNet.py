@@ -39,11 +39,11 @@ def prepareData(data_df):
     return x, y
 
 print('Reading Train Dataframe...')
-train_df = pd.read_csv(Path('feature-dataframes/AugmPatLvDiv_TRAIN-AllFeats_1612-Features_6405-images.csv'), index_col=0)
+train_df = pd.read_csv(Path('feature-dataframes/AugmPatLvDiv_TRAIN-AllFeats_1612-Features_40000-images.csv'), index_col=0)
 print('Done Read Train Dataframe!')
 
 print('Reading Validation Dataframe...')
-valid_df = pd.read_csv(Path('feature-dataframes/PatLvDiv_TEST-AllFeats_1612-Features_607-images.csv'), index_col=0)
+valid_df = pd.read_csv(Path('feature-dataframes/AugmPatLvDiv_VALIDATION-AllFeats_1612-Features_10000-images.csv'), index_col=0)
 print('Done Read Validation Dataframe!')
 
 print('Preparing Data...')
@@ -79,8 +79,8 @@ def criarRede(loos, kernel_initializer, activation,
 
 classificador = KerasClassifier(build_fn = criarRede)
 parametros = {'batch_size': [1500],
-              'dropout' : [0.3],
-              'epochs': [100],
+              'dropout' : [0.1],
+              'epochs': [150],
               #50, 100, 150, 200, 250
               'loos': ['binary_crossentropy'],
               'kernel_initializer': ['normal'],
