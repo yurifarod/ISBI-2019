@@ -18,7 +18,7 @@ from keras.wrappers.scikit_learn import KerasClassifier
 from keras.layers import Dropout, Dense
 from keras.models import Sequential
 from tensorflow import keras
-from sklearn.metrics import f1_score, accuracy_score, recall_score, roc_auc_score, cohen_kappa_score
+from sklearn.metrics import f1_score, accuracy_score, recall_score, roc_auc_score, cohen_kappa_score, precision_score
 
 def clean_Dirt_Data(x):
     ret = []
@@ -42,6 +42,13 @@ def prepareData(data_df):
         x[col] = (x[col] - data_df[col].mean()) / data_df[col].std() #mean=0, std=1
     x = x.values
     return x, y
+
+def metric_calc(pred_labels, true_labels):
+    TP = np.sum(np.logical_and(pred_labels == 1, true_labels == 1))
+    FP = np.sum(np.logical_and(pred_labels == 1, true_labels == 0))
+    TN = np.sum(np.logical_and(pred_labels == 0, true_labels == 0))
+    FN = np.sum(np.logical_and(pred_labels == 0, true_labels == 1))
+    return(TP, FP, TN, FN)
 
 print('Reading Train Dataframe...')
 train_df = pd.read_csv(Path('feature-dataframes/AugmPatLvDiv_TRAIN-AllFeats_1612-Features_40000-images.csv'), index_col=0)
@@ -149,6 +156,7 @@ for i in range(607):
         ensemble_reduced.append(0)
 ensemble_reduced = np.array(ensemble_reduced)
 
+tp, fp, tn, fn = metric_calc(ensemble_reduced, y_valid)
 
 precisao = f1_score(y_valid, ensemble_reduced)
 print('Reduced Ensemble F1-Score: ' , precisao)
@@ -160,3 +168,7 @@ roc = roc_auc_score(y_valid, ensemble_reduced)
 print('Reduced Ensemble  ROC AUC:' , roc)
 kappa = cohen_kappa_score(y_valid, ensemble_reduced)
 print('Reduced Ensemble Kappa:' , roc)
+prec = precision_score(y_valid, ensemble_reduced)
+print('Reduced Ensemble Precision:' , prec)
+specificity = tn / (tn+fp)
+print('Reduced Ensemble Specificity:' , specificity)

@@ -1,24 +1,25 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Chagging code for extend paper on 14/01/2022;
-
-Created on Thu May 13 11:13:38 2021
+Chagging code for extend paper on 23/07/2022;
 
 @author: yurifarod, Elwyslan
 """
-
-
-from keras.layers import Dropout, Dense
-from keras.models import Sequential
-from sklearn.metrics import f1_score
-from pathlib import Path
+import random
 import numpy as np
 import pandas as pd
+from pathlib import Path
+from sklearn.svm import LinearSVC
+from sklearn.calibration import CalibratedClassifierCV
+from sklearn.naive_bayes import GaussianNB
+from keras.layers import Dropout, Dense
+from keras.models import Sequential
 from tensorflow import keras
-import timeit
+from sklearn.metrics import f1_score, accuracy_score, recall_score, roc_auc_score, cohen_kappa_score
+from sklearn import metrics
+import matplotlib.pyplot as plt
 
-start = timeit.default_timer()
+reduce_factor = 15
 
 def clean_Dirt_Data(x):
     ret = []
@@ -42,18 +43,31 @@ def prepareData(data_df):
         x[col] = (x[col] - data_df[col].mean()) / data_df[col].std() #mean=0, std=1
     x = x.values
     return x, y
+            
 
 print('Reading Train Dataframe...')
 train_df = pd.read_csv(Path('feature-dataframes/AugmPatLvDiv_TRAIN-AllFeats_1612-Features_40000-images.csv'), index_col=0)
-print('Done Read Train Dataframe!')
+prior_train_df = pd.read_csv(Path('feature-dataframes/AugmPatLvDiv_TRAIN-AllFeats_1612-Features_40000-images.csv'), index_col=0)
 
+extra_train_df = pd.read_csv(Path('feature-dataframes/AugmPatLvDiv_VALIDATION-AllFeats_1612-Features_10000-images.csv'), index_col=0)
+
+extra_train_df.index += len(prior_train_df.index)
+
+frames = [prior_train_df, extra_train_df]
+
+train_df = pd.concat(frames)
+print('Done Read Train Dataframe!')
+   
 print('Reading Validation Dataframe...')
 valid_df = pd.read_csv(Path('feature-dataframes/PatLvDiv_TEST-AllFeats_1612-Features_1503-images.csv'), index_col=0)
+    
 print('Done Read Validation Dataframe!')
 
 print('Preparing Data...')
 
-for i in range(1613):
+new_size = valid_df.shape[1]
+
+for i in range(new_size):
     valid_df[valid_df.columns[i]] = clean_Dirt_Data(valid_df[valid_df.columns[i]])
     train_df[train_df.columns[i]] = clean_Dirt_Data(train_df[train_df.columns[i]])
 
@@ -62,17 +76,20 @@ x_valid, y_valid = prepareData(valid_df)
 
 print('Done Read Train and Validation data!')
 
-'''
-dropout = 0.1
-epochs = 150
-kernel_initializer = 'normal'
-activation = 'relu'
-loss = 'binary_crossentropy'
-neurons = 2560
-learning_rate = 0.001
-batch_size = 250
-'''
+print('Training NB')
+classificador = GaussianNB(priors=None, var_smoothing=1e-9)
+classificador.fit(x_train, y_train)
 
+previsoes_nb = classificador.predict(x_valid)
+prob_nb = classificador.predict_proba(x_valid)
+
+print('Training SVM')
+classificador = LinearSVC()
+classificador.fit(x_train, y_train)
+
+previsoes_svc = classificador.predict(x_valid)
+
+print('Training RNA')
 kernel_initializer = 'normal'
 activation = 'relu'
 loss = 'binary_crossentropy'
@@ -84,6 +101,7 @@ beta_1 = 0.97
 beta_2 = 0.97
 decay  = 0.05
 epochs = 150
+
 classificador = Sequential()
 classificador.add(Dense(units = neurons, activation = activation, 
                     kernel_initializer = kernel_initializer, input_shape = (x_train.shape[1],)))
@@ -104,18 +122,38 @@ classificador.fit(x_train, y_train, batch_size = batch_size, epochs = epochs)
 
 qtd_param = classificador.count_params()
 
-print(qtd_param)
+print('Number of Parameters: ', qtd_param)
 
-#Aqui fazemos a previsão
-previsoes = classificador.predict(x_valid)
-previsoes = (previsoes > 0.5)
+print('Calculating the ROC curve...')
 
-#Agora vamos medir a acurácia da rede
-precisao = f1_score(y_valid, previsoes)
+previsoes_rna = classificador.predict(x_valid)
+prob_rna = previsoes_rna
+previsoes_rna = (previsoes_rna > 0.5)
+previsoes_num_rna = []
+for i in previsoes_rna:
+    if i:
+        previsoes_num_rna.append(1)
+    else:
+        previsoes_num_rna.append(0)
+previsoes_rna = np.array(previsoes_num_rna)
 
-previsoes_saida = pd.DataFrame(previsoes)
-previsoes_saida.to_csv('rna_previsoes.csv' )
+prev_ensemble = []
 
-print('F1-Score: ', precisao)
-stop = timeit.default_timer()
-print('Time: ', stop - start)  
+new_size_x = valid_df.shape[0]
+for i in range(new_size_x):
+    if previsoes_rna[i] + previsoes_nb[i] + previsoes_svc[i] > 1:
+        prev_ensemble.append(1)
+    else:
+        prev_ensemble.append(0)
+prev_ensemble = np.array(prev_ensemble)
+
+
+fpr, tpr, _ = metrics.roc_curve(y_valid,  prev_ensemble)
+auc = metrics.roc_auc_score(y_valid, prev_ensemble)
+
+#create ROC curve
+plt.plot(fpr,tpr,label="AUC="+str(auc))
+plt.ylabel('True Positive Rate')
+plt.xlabel('False Positive Rate')
+plt.legend(loc=4)
+plt.show()

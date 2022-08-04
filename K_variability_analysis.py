@@ -88,6 +88,29 @@ for it in range(100):
     
     print('Reading Validation Dataframe...')
     valid_df = pd.read_csv(Path('feature-dataframes/PatLvDiv_TEST-AllFeats_1612-Features_1503-images.csv'), index_col=0)
+    
+    print('Preparing Data...')
+    
+    print('Reducing Data...')
+    
+    #IF IS THE REDUCE VERSION
+    # nb_features = pd.read_csv(Path('nb_interpretavel.csv'), index_col=0).values
+    # svc_features = pd.read_csv(Path('svc_interpretavel.csv'), index_col=0).values
+    # rna_features = pd.read_csv(Path('rna_interpretavel_manual.csv'), index_col=0).values
+    
+    # features = valid_df.columns
+    
+    # f = open('z_interpretable_ensemble_analysis.txt', 'w')
+    
+    # for i in range(1613):
+    #     if i != 0:
+    #         if nb_features[i-1] or svc_features[i-1] or rna_features[i-1]:
+    #             f.write(features[i] + '\n')
+    #         else:
+    #             valid_df.drop(features[i], inplace=True, axis=1)
+    #             train_df.drop(features[i], inplace=True, axis=1)
+    # f.close()
+    
     print('Preparing Data...')
     
     new_size = valid_df.shape[1]

@@ -11,7 +11,14 @@ Created on Thu May 13 11:13:38 2021
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from sklearn.metrics import f1_score, accuracy_score, recall_score, roc_auc_score, cohen_kappa_score
+from sklearn.metrics import f1_score, accuracy_score, recall_score, roc_auc_score, cohen_kappa_score, precision_score
+
+def metric_calc(pred_labels, true_labels):
+    TP = np.sum(np.logical_and(pred_labels == 1, true_labels == 1))
+    FP = np.sum(np.logical_and(pred_labels == 1, true_labels == 0))
+    TN = np.sum(np.logical_and(pred_labels == 0, true_labels == 0))
+    FN = np.sum(np.logical_and(pred_labels == 0, true_labels == 1))
+    return(TP, FP, TN, FN)
 
 def clean_Dirt_Data(x):
     ret = []
@@ -81,14 +88,74 @@ precisao = f1_score(y_valid, rna_previsoes)
 print('All Features RNA F1-Score:' , precisao)
 
 '''
+Converte em numero
+'''
+
+prev_rna = []
+for i in rna_previsoes['0']:
+    if i:
+        prev_rna.append(1)
+    else:
+        prev_rna.append(0)
+
+prev_nb = []
+for i in nb_previsoes['0']:
+    if i:
+        prev_nb.append(1)
+    else:
+        prev_nb.append(0)
+
+prev_svm = []
+for i in svm_previsoes['0']:
+    if i:
+        prev_svm.append(1)
+    else:
+        prev_svm.append(0)
+        
+'''
 Mais metricas do melhor cenario
 '''
 
-acc = accuracy_score(y_valid, ensemble_scenary_1)
+ensemble_best = []
+for i in range(607):
+    if prev_rna[i] + prev_nb[i] + prev_svm[i] > 1:
+        ensemble_best.append(1)
+    else:
+        ensemble_best.append(0)
+ensemble_best = np.array(ensemble_best)
+
+tp, fp, tn, fn = metric_calc(ensemble_best, y_valid)
+
+print('====== ENSEMBLE METRIC RESULTS ========')
+f1 = f1_score(y_valid, ensemble_best)
+print('Scenary 1 F1-SCORE:' , f1)
+acc = accuracy_score(y_valid, ensemble_best)
 print('Scenary 1 Acuraccy:' , acc)
-rec = recall_score(y_valid, ensemble_scenary_1)
+rec = recall_score(y_valid, ensemble_best)
 print('Scenary 1 Recall:' , rec)
-roc = roc_auc_score(y_valid, ensemble_scenary_1)
+roc = roc_auc_score(y_valid, ensemble_best)
 print('Scenary 1 ROC AUC:' , roc)
-kappa = cohen_kappa_score(y_valid, ensemble_scenary_1)
-print('Reduced Ensemble Kappa:' , roc)
+kappa = cohen_kappa_score(y_valid, ensemble_best)
+print('Scenary 1 Kappa:' , roc)
+prec = precision_score(y_valid, ensemble_best)
+print('Scenary 1 Precision:' , prec)
+specificity = tn / (tn+fp)
+print('Scenary 1 Specificity:' , specificity)
+
+prev_rna = np.array(prev_rna)
+tp, fp, tn, fn = metric_calc(prev_rna, y_valid)
+print('====== ANN METRIC RESULTS ========')
+f1 = f1_score(y_valid, prev_rna)
+print('ANN F1-SCORE:' , f1)
+acc = accuracy_score(y_valid, prev_rna)
+print('ANN Acuraccy:' , acc)
+rec = recall_score(y_valid, prev_rna)
+print('ANN Recall:' , rec)
+roc = roc_auc_score(y_valid, prev_rna)
+print('ANN ROC AUC:' , roc)
+kappa = cohen_kappa_score(y_valid, prev_rna)
+print('ANN Kappa:' , roc)
+prec = precision_score(y_valid, prev_rna)
+print('ANN Precision:' , prec)
+specificity = tn / (tn+fp)
+print('ANN Specificity:' , specificity)

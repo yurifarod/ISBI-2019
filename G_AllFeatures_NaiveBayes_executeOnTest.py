@@ -1,4 +1,4 @@
-    #!/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Chagging code for extend paper on 14/01/2022;
@@ -13,7 +13,7 @@ import pandas as pd
 from pathlib import Path
 from sklearn.metrics import f1_score
 from sklearn.naive_bayes import GaussianNB
-#from tensorflow import keras
+from tensorflow import keras
 import timeit
 
 start = timeit.default_timer()
