@@ -56,6 +56,7 @@ print('Done Read Train Dataframe!')
 
 print('Reading Validation Dataframe...')
 valid_df = pd.read_csv(Path('feature-dataframes/PatLvDiv_TEST-AllFeats_1612-Features_1503-images.csv'), index_col=0)
+
 print('Done Read Validation Dataframe!')
 
 print('Reducing Data...')
@@ -149,7 +150,8 @@ for i in previsoes_rna:
 previsoes_rna = np.array(previsoes_num_rna)
 
 ensemble_reduced = []
-for i in range(607):
+tam = len(previsoes_rna)
+for i in range(tam):
     if previsoes_rna[i] + previsoes_nb[i] + previsoes_svc[i] > 1:
         ensemble_reduced.append(1)
     else:
