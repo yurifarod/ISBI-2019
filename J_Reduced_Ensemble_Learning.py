@@ -69,7 +69,8 @@ features = valid_df.columns
 
 f = open('z_interpretable_ensemble_analysis.txt', 'w')
 
-for i in range(1613):
+nrange = len(valid_df.columns)
+for i in range(nrange):
     if i != 0:
         if nb_features[i-1] or svc_features[i-1] or rna_features[i-1]:
             f.write(features[i] + '\n')

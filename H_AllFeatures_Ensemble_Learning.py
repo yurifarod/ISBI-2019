@@ -50,7 +50,8 @@ print('Done Read Validation Dataframe!')
 
 print('Preparing Data...')
 
-for i in range(1613):
+nrange = valid_df.shape[1]
+for i in range(nrange):
     valid_df[valid_df.columns[i]] = clean_Dirt_Data(valid_df[valid_df.columns[i]])
 
 x_valid, y_valid = prepareData(valid_df)
