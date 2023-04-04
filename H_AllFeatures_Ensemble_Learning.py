@@ -43,6 +43,17 @@ def prepareData(data_df):
     x = x.values
     return x, y
 
+def ensemble_learning(prev_1, prev_2, prev_3):
+    ensemble = []
+    tam = len(prev_1)
+    for i in range(tam):
+        if prev_1[i] + prev_2[i] + prev_3[i] > 1:
+            ensemble.append(1)
+        else:
+            ensemble.append(0)
+    ensemble = np.array(ensemble_best)
+    
+    return ensemble
 
 valid_df = pd.read_csv(Path('feature-dataframes/PatLvDiv_TEST-AllFeats_1612-Features_1503-images.csv'), index_col=0)
 
@@ -56,39 +67,12 @@ for i in range(nrange):
 
 x_valid, y_valid = prepareData(valid_df)
 
+
+
 nb_previsoes = pd.read_csv(Path('previsoes/naive_bayes_previsoes.csv'), index_col = 0)
 knn_previsoes = pd.read_csv(Path('previsoes/knn_previsoes.csv'), index_col = 0)
 svm_previsoes = pd.read_csv(Path('previsoes/svm_previsoes.csv'), index_col = 0)
 rna_previsoes = pd.read_csv(Path('previsoes/rna_previsoes.csv'), index_col = 0)
-
-ensemble_scenary_1 = rna_previsoes + knn_previsoes + svm_previsoes
-ensemble_scenary_2 = rna_previsoes + nb_previsoes + svm_previsoes
-ensemble_scenary_3 = rna_previsoes + knn_previsoes + nb_previsoes
-ensemble_scenary_4 = svm_previsoes + knn_previsoes + nb_previsoes
-
-precisao = f1_score(y_valid, nb_previsoes)
-print('Naive Bayes F1-Score:' , precisao)
-
-precisao = f1_score(y_valid, knn_previsoes)
-print('KNN 1 F1-Score:' , precisao)
-
-precisao = f1_score(y_valid, svm_previsoes)
-print('SVC F1-Score:' , precisao)
-
-precisao = f1_score(y_valid, ensemble_scenary_1)
-print('Scenary 1 F1-Score:' , precisao)
-
-precisao = f1_score(y_valid, ensemble_scenary_2)
-print('Scenary 2 F1-Score:' , precisao)
-
-precisao = f1_score(y_valid, ensemble_scenary_3)
-print('Scenary 3 F1-Score:' , precisao)
-
-precisao = f1_score(y_valid, ensemble_scenary_4)
-print('Scenary 4 F1-Score:' , precisao)
-
-precisao = f1_score(y_valid, rna_previsoes)
-print('All Features RNA F1-Score:' , precisao)
 
 '''
 Converte em numero
@@ -114,19 +98,50 @@ for i in svm_previsoes['0']:
         prev_svm.append(1)
     else:
         prev_svm.append(0)
+
+prev_knn = []
+for i in svm_previsoes['0']:
+    if i:
+        prev_knn.append(1)
+    else:
+        prev_knn.append(0)
+
+ensemble_scenary_1 = ensemble_learning(prev_rna, prev_knn, prev_svm)
+ensemble_scenary_2 = ensemble_learning(prev_rna, prev_nb, prev_svm)
+ensemble_scenary_3 = ensemble_learning(prev_rna, prev_knn, prev_nb)
+ensemble_scenary_4 = ensemble_learning(prev_svm, prev_knn, prev_nb)
+
+precisao = f1_score(y_valid, nb_previsoes)
+print('Naive Bayes F1-Score:' , precisao)
+
+precisao = f1_score(y_valid, knn_previsoes)
+print('KNN 1 F1-Score:' , precisao)
+
+precisao = f1_score(y_valid, svm_previsoes)
+print('SVC F1-Score:' , precisao)
+
+precisao = f1_score(y_valid, ensemble_scenary_1)
+print('Scenary 1 F1-Score:' , precisao)
+
+precisao = f1_score(y_valid, ensemble_scenary_2)
+print('Scenary 2 F1-Score:' , precisao)
+
+precisao = f1_score(y_valid, ensemble_scenary_3)
+print('Scenary 3 F1-Score:' , precisao)
+
+precisao = f1_score(y_valid, ensemble_scenary_4)
+print('Scenary 4 F1-Score:' , precisao)
+
+precisao = f1_score(y_valid, rna_previsoes)
+print('All Features RNA F1-Score:' , precisao)
+
+
         
 '''
 Mais metricas do melhor cenario
 '''
 
-ensemble_best = []
-tam = len(prev_rna)
-for i in range(tam):
-    if prev_rna[i] + prev_nb[i] + prev_svm[i] > 1:
-        ensemble_best.append(1)
-    else:
-        ensemble_best.append(0)
-ensemble_best = np.array(ensemble_best)
+ensemble_best = ensemble_learning(prev_rna, prev_nb, prev_svm)
 
 tp, fp, tn, fn = metric_calc(ensemble_best, y_valid)
 
